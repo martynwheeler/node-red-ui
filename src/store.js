@@ -1,5 +1,4 @@
 import rooms from './store-modules/rooms.js';
-import devices from './store-modules/devices.js';
 import schedules from './store-modules/schedules.js';
 
 export default {
@@ -20,7 +19,6 @@ export default {
     },
     modules: {
         rooms,
-        devices,
         schedules,
     },
 };

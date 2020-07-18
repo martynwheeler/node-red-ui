@@ -98,12 +98,6 @@ const vm = new Vue({
         // set a variable to this instance
         var vueApp = this
 
-        // Load data from api into state -- Not currently used
-        //vueApp.$store.dispatch('rooms/loadRooms')
-
-        // Example of retrieving data from uibuilder
-        //vueApp.feVersion = uibuilder.get('version')
-
         /** You can use the following to help trace how messages flow back and forth.
          * You can then amend this processing to suite your requirements.
          */
@@ -115,11 +109,12 @@ const vm = new Vue({
             //console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', newVal)
             switch(newVal.topic) {
                 // Not used
-                case 'uibuilder/room/update':
+                case 'test':
                     // ...
                     //vueApp.$store.commit('rooms/addRoom', { name: newVal.room_id })
                     //vueApp.$store.commit('addRoomtoUnconfigured', { name: newVal.room_id })
-                    console.log(vueApp.$store.state.rooms.rooms[0])
+                    //vueApp.gValue = newVal.payload.temperature
+                    //console.log(newVal.payload.temperature)
                     break;
                 
                 // Process the list of rooms and devices from node-red message
@@ -135,11 +130,11 @@ const vm = new Vue({
                 // Process new data from a sensor
                 default:
                     var parts = newVal.topic.split("/")
+                    var device = { id: parts[1], name: parts[2] + '/' + parts[3] }
                     for (const [key, value] of Object.entries(newVal.payload)) {
-                        if (!(key === "heater" || key === "battery")){ //Need to define these functions
-                            var device = { id: parts[2], name: parts[3] + '/' + parts[4], function: key, value: value }
-                            vueApp.$store.commit('rooms/UPDATE_VALUE', device)
-                        }
+                        device.function = key
+                        device.value = value
+                        vueApp.$store.commit('rooms/UPDATE_VALUE', device) // commit new value of device to rooms store
                     }
                     //console.log(`[indexjs:uibuilder:onChange] New message type incoming: ${msg.topic}\nPayload: ${msg.payload}`)
             }
@@ -198,7 +193,6 @@ const vm = new Vue({
             //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', newVal)
             vueApp.serverTimeOffset = newVal
         })
-
     }, // --- End of mounted hook --- //
     store: new Vuex.Store(store),
     router: new VueRouter(router),

@@ -7,7 +7,6 @@
                 for instructions on how start using the interface.
             </p>
         </b-alert>
-        
         <router-view></router-view>
     </div>
 </template>

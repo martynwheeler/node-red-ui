@@ -19,17 +19,25 @@
         >
           Home
         </b-nav-item>
-        <b-nav-item
+        <!--- Only show base if no rooms assigned -->
+        <b-nav-item v-if="!hasRooms"
           :to="{ name: 'rooms_overview' }"
         >
           Rooms
         </b-nav-item>
         <b-nav-item v-for="room in roomList" :key="roomList.name" :to="{ name: 'room', params: { roomId: room.id }}">{{ room.name }}</b-nav-item>
         <b-nav-item
+          :to="{ name: 'scheduler' }"
+        >
+          Scheduler
+        </b-nav-item>
+        <!--
+        <b-nav-item
           :to="{ name: 'admin' }"
         >
           Admin panel
         </b-nav-item>
+        -->
       </b-navbar-nav>
     </b-collapse>
   </b-navbar>
@@ -40,7 +48,7 @@ module.exports = {
     name: 'HeaderMenu',
     data() {
       return {
-        brand: 'Uibuilder v2 Showcase',
+        brand: 'Wheeler House',
       };
     },
     computed: {

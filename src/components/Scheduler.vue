@@ -2,12 +2,12 @@
     <div v-if="hasSchedules" id="scheduler">
         <b-container>
             <b-row align-h="center">
-                <b-col sm="3" class="text-center p-0 ml-1 mr-1">
+                <b-col md="4" class="text-center p-0 ml-1 mr-1">
                     <b-card class="bg-secondary text-light">
                         <h5 class="card-title pb-2 text-left">Select Schedule Item</h5>
                         <b-row v-for="(i, idx) in 3" :key="i" align-h="center">
                             <span v-for="j in [idx*4 + 1, idx*4 + 2, idx*4 + 3, idx*4 + 4]">
-                                <input type="radio" class="shed" :id="`shd-${j}`" :value="`shd-${j}`" v-model="picked">
+                                <input type="radio" class="shed" :id="`shd-${j}`" :value="`shd-${j}`" v-model="picked" @click="changeSchedule">
                                 <label v-if="j < 10" :for="`shd-${j}`">0{{ j }}</label>
                                 <label v-else :for="`shd-${j}`">{{ j }}</label>
                             </span>
@@ -15,11 +15,12 @@
                     </b-card>
                     <input type="hidden" id="init" value="yes">
                 </b-col>
-                <b-col sm="3" class="border p-0 ml-1 mr-1">
+                <b-col md="4" class="border p-0 ml-1 mr-1">
                     <b-card id="shd-itm" class="bg-secondary text-light">
                         <h5 class="card-title pb-2 text-left">Schedule Item</h5>
                         <table>
-                            <tr><td><input type="text" id="shd-tag" class="mb-2" v-model="schedule.tag"><label class="valLabel">Tag</label></td></tr>
+                            <tr><td><input type="text" id="shd-function" class="mb-2 shd-txtbox" v-model="schedule.function"><label class="valLabel">Function</label></td></tr>
+                            <tr><td><input type="text" id="shd-topic" class="mb-2 shd-txtbox" v-model="schedule.topic"><label class="valLabel">Topic</label></td></tr>
                             <tr><td><input type="time" id="shd-st" class="mb-2" v-model="schedule.ontime"><label for="shd-st" class="valLabel">Start time</label></td></tr>
                             <tr><td><input type="text" id="shd-st-v" class="valMedium mb-2" v-model="schedule.onpayload"><label class="valLabel">Start Value</label></td></tr>
                             <tr><td><input type="time" id="shd-et" class="mb-2" v-model="schedule.offtime"><label for="shd-et" class="valLabel">End time</label></td></tr>
@@ -45,12 +46,12 @@
                         </div>
                         <div class="mt-3">
                         <span v-if="schedule.suspended">
-                            <input type="checkbox" id="shd-disabled" class="dis" style="width: 110px;" checked><label for="shd-disabled">Disable</label>
+                            <input type="checkbox" id="shd-disabled" class="dis" checked><label for="shd-disabled">Disable</label>
                         </span>
                         <span v-else>
-                            <input type="checkbox" id="shd-disabled" class="dis" style="width: 110px;"><label for="shd-disabled">Disable</label>
+                            <input type="checkbox" id="shd-disabled" class="dis"><label for="shd-disabled">Disable</label>
                         </span>
-                        <button class="valMedium set" id="shd-set" @click="updateSchedule">SET</button>
+                        <button class="valMedium set" id="shd-set" v-bind:style="buttonStyle" @click="updateSchedule">Set</button>
                         </div>
                     </b-card>
                 </b-col>
@@ -64,6 +65,9 @@ module.exports = {
     data() {
         return { // on first load set the selected schedule to 1
             picked: 'shd-1',
+            counter: 0,
+            buttonStyle: {},
+            hasChanged: false,
         }
     },
     computed: {
@@ -83,10 +87,9 @@ module.exports = {
         updateSchedule: function(event) { // Send message back to nr to update the schedule -- to do: button colour change
             var schedule = {} //build a json array of params for sql update in nr
             for (const [key, value] of Object.entries(this.schedule)) {
-//                if (key != 'dofweek'){
-                    schedule[`$${key}`] = value
-//                }
+                schedule[`$${key}`] = value
             }
+            //Send the first message
             var msg = {topic: "setSchedules", params: schedule}
             uibuilder.send(msg)
             // now build array to update dow
@@ -94,18 +97,43 @@ module.exports = {
             schedule = {$id: this.schedule.id}
             // Loop over days to store boolean as 1/0
             for (dow = 0; dow< 7; dow++) {
-                if(this.schedule.dofweek[dow]) {
-                    schedule[days[dow]] = 1
-                } else {
-                    schedule[days[dow]] = 0
-                }
+                schedule[days[dow]] = this.schedule.dofweek[dow] ? 1 : 0 // change to 1/0
             }
+            //Send the second message
             var msg = {topic: "setDays", params: schedule}
             uibuilder.send(msg)
+            this.resetStyle()
+        },
+        resetStyle: function() {
+            this.buttonStyle = {}
+            this.counter = 1
+            this.hasChanged = false
+        },
+        changeSchedule: function() {            
+            if (this.hasChanged) {
+                if (confirm("Unsaved changes, press OK to save or Cancel to discard changes")) {
+                    this.updateSchedule()
+                } else {
+                    this.resetStyle()
+                }
+            }
+            this.counter = 0
+        },
+    },
+    watch: {
+        schedule: {
+            handler() {
+                this.counter++ // hack because the scheduler object changes upon initialisation
+                if (this.counter > 1) {
+                    this.hasChanged = true
+                    this.buttonStyle = {'background-color': 'red', color: 'white'}
+                }
+            },
+            deep: true,
         },
     },
     filters: {
-
+        
     },
 }
 </script>
@@ -131,6 +159,8 @@ module.exports = {
     input[type="time"]:disabled { color: #486170;}
     input[type="date"]{border: 1px solid #cccccc;  border-radius:3px; color:#3C3C3C; font-size: 1.0em;}
     input[type="date"]:disabled { color: #486170;}
+
+    .shd-txtbox {width: 250px;}
 
     .valMedium {width: 75px;}
     .valLarge {width: 155px;}

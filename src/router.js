@@ -1,6 +1,7 @@
 const HeaderMenu = httpVueLoader('./components/HeaderMenu.vue');
 const IndexView = httpVueLoader('./views/IndexView.vue');
 const AdminView = httpVueLoader('./views/AdminView.vue');
+const SchedulerView = httpVueLoader('./views/SchedulerView.vue');
 
 export default {
     routes: [
@@ -9,6 +10,14 @@ export default {
             name: 'index',
             components: {
                 default: IndexView,
+                menu: HeaderMenu,
+            },
+        },
+        {
+            path: '/scheduler',
+            name: 'scheduler',
+            components: {
+                default: SchedulerView,
                 menu: HeaderMenu,
             },
         },
